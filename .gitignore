@@ -15,5 +15,6 @@ env/
 
 *.log
 
-test.txt
+
 pictures/
+my_base.db
