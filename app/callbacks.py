@@ -6,7 +6,7 @@ from aiogram import Router, F
 from aiogram.fsm.context import FSMContext
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from database.orm_query import orm_add_remind, orm_delete_remind, orm_check_remind
+from database.orm_query import orm_add_remind, orm_delete_remind
 
 from datetime import datetime, timedelta, timezone
 
@@ -24,25 +24,15 @@ async def agree_add(callback: CallbackQuery, state: FSMContext, session: AsyncSe
 
     data = await state.get_data()
     wait_time = int(data['time'])
-    text = data['text']
     end_time = datetime.now(timezone(timedelta(hours=5))) + timedelta(minutes=float(wait_time))
-    end_time =f"{end_time.day} {mounths[end_time.month]} {end_time.strftime('%H:%M')}"
-    data['end_time'] = end_time
-    data['end_date'] = datetime.now()
+    data['end_time'] = f"{end_time.day} {mounths[end_time.month]} {end_time.strftime('%H:%M')}"
+
+    data['remind_at'] = datetime.now(timezone(timedelta(hours=5))) + timedelta(minutes=float(wait_time))
     await state.clear()
 
     #запись в бд
-    obj_id = await orm_add_remind(session, data, callback.message.from_user.id)
-
-
+    await orm_add_remind(session, data, callback.from_user.id)
     await callback.message.edit_text(f"Ок! Напомню через {wait_time} минут.", reply_markup=None)
-    await asyncio.sleep(wait_time * 60)
-    # если за всё это время запись не удалилась из бд
-    if await orm_check_remind(session, obj_id, callback.message.from_user.id):
-        await callback.message.answer(f"⏰ Напоминание: {text}")
-
-        #удаление истекшего напоминания из бд
-        await orm_delete_remind(session, obj_id, callback.message.from_user.id)
 
 @router_callbacks.callback_query(F.data == "Disagree")
 async def disagree_add(callback: CallbackQuery, state: FSMContext):

@@ -9,7 +9,7 @@ async def orm_add_remind(session: AsyncSession, data: dict, tg_id: int):
         text=data['text'],
         time=int(data['time']),
         end_time=str(data['end_time']),
-        end_date=data['end_date'],
+        remind_at=data['remind_at'],
     )
     session.add(obj)
     await session.commit()
@@ -27,7 +27,3 @@ async def orm_delete_remind(session: AsyncSession, remind_id: int, tg_id: int):
     await session.execute(query)
     await session.commit()
 
-async def orm_check_remind(session: AsyncSession, remind_id: int, tg_id: int):
-    query = select(Remind).where(Remind.id == remind_id, Remind.tg_id==tg_id)
-    result = await session.execute(query)
-    return result.scalar_one_or_none() is not None

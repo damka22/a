@@ -1,5 +1,5 @@
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column
-from sqlalchemy import DateTime
+from sqlalchemy import DateTime, String
 
 from datetime import datetime
 
@@ -14,4 +14,5 @@ class Remind(Base):
     text: Mapped[str]
     time: Mapped[int]
     end_time: Mapped[str]
-    end_date: Mapped[datetime] = mapped_column(DateTime)
+    remind_at: Mapped[datetime] = mapped_column(DateTime)
+    status: Mapped[str] = mapped_column(String, default="active")

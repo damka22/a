@@ -29,11 +29,18 @@ async def help_msg(message: Message):
 
 @router_handlers.message(Command("menu"))
 async def menu(message: Message, session: AsyncSession):
-    #вывод всех напоминаний(даже те которые прошли)
+    #вывод всех напоминаний
     s = 'меню:\n'
     for task in await orm_get_reminds(session):
-        s = s + f"{task.text} — {task.end_time}\n"
+        if task.status == 'active':
+            s = s + f"{task.text} — {task.end_time}\n"
     await message.answer(s)
+
+
+
+
+
+
 
 
 

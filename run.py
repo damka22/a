@@ -19,6 +19,7 @@ from aiogram.filters import Command
 from app.handlers import router_handlers
 from app.callbacks import router_callbacks
 from common.bot_cmd_list import private_chat
+from common.scheduler import reminder_scheduler
 
 
 bot = Bot(token=os.getenv("TOKEN"))
@@ -33,6 +34,7 @@ async def clear_bd(message: types.Message):
 
 async def main():
     await create_db()
+    asyncio.create_task(reminder_scheduler(bot))
 
     dp.update.middleware(DataBaseSession(session_pool=session_maker))
 
