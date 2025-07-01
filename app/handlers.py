@@ -30,15 +30,8 @@ async def help_msg(message: Message):
 @router_handlers.message(Command("menu"))
 async def menu(message: Message, session: AsyncSession):
     #вывод всех напоминаний
-    s = 'меню:\n'
-    for task in await orm_get_reminds(session):
-        if task.status == 'active':
-            s = s + f"{task.text} — {task.end_time}\n"
-    await message.answer(s)
-
-
-
-
+    reminders = await orm_get_reminds(session)
+    await message.answer("меню", reply_markup=kb.reminders_keyboard(reminders))
 
 
 
@@ -58,13 +51,22 @@ async def first_process_text(message: Message, state: FSMContext):
 @router_handlers.message(Remind.time)
 async def second_process_time(message: Message, state: FSMContext):
     try:
+        delta_minutes = int(message.text)
+
+        if delta_minutes < 1 or delta_minutes > 1440:
+            await message.reply("Время должно быть не меньше 1 и не больше 1440 минут.")
+            return
+
         await state.update_data(time=message.text)
         data = await state.get_data()
         wait_time = int(data['time'])
         text = data['text']
         await message.answer(f"Создать напоминание <{text}> через {wait_time} минут?", reply_markup=kb.add_agree)
+
     except ValueError:
-        await message.answer("Введи число")
+        await message.reply("Введите целое число минут.")
+    except Exception as e:
+        await message.reply("Произошла ошибка, попробуйте ещё раз.")
 
 
 

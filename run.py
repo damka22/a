@@ -1,6 +1,5 @@
 import os
 
-from aiogram.enums import ParseMode
 from dotenv import find_dotenv, load_dotenv
 
 from middlewares.db import DataBaseSession
@@ -10,6 +9,7 @@ load_dotenv(find_dotenv())
 from database.engine import create_db, session_maker, drop_db
 
 import logging
+import common.color_logging
 
 import asyncio
 
@@ -22,10 +22,10 @@ from common.bot_cmd_list import private_chat
 from common.scheduler import reminder_scheduler
 
 
+
 bot = Bot(token=os.getenv("TOKEN"))
 dp = Dispatcher()
-dp.include_router(router_handlers)
-dp.include_router(router_callbacks)
+dp.include_routers(router_handlers, router_callbacks)
 
 @dp.message(Command("clear"))
 async def clear_bd(message: types.Message):
@@ -45,5 +45,16 @@ async def main():
 
 if __name__ == '__main__':
     logging.basicConfig(level=logging.INFO)
+
+    # Логгер для запросов
+    sql_logger = logging.getLogger("sqlalchemy.engine.Engine")
+    sql_logger.setLevel(logging.INFO)
+    sql_logger.addFilter(common.color_logging.SqlFilter())
+    # Логгер для ошибок SQLAlchemy
+    error_logger = logging.getLogger("sqlalchemy")
+    error_logger.setLevel(logging.WARNING)
+    error_logger.setLevel(logging.ERROR)
+    error_logger.setLevel(logging.CRITICAL)
+
     try: asyncio.run(main())
     except KeyboardInterrupt: print('Exit')

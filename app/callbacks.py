@@ -1,12 +1,9 @@
-import asyncio
-from sqlalchemy import select, delete
-
 from aiogram.types import CallbackQuery
 from aiogram import Router, F
 from aiogram.fsm.context import FSMContext
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from database.orm_query import orm_add_remind, orm_delete_remind
+from database.orm_query import orm_add_remind
 
 from datetime import datetime, timedelta, timezone
 

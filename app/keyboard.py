@@ -1,5 +1,4 @@
-from aiogram.types import (reply_keyboard_markup, keyboard_button,
-                           inline_keyboard_markup, inline_keyboard_button, InlineKeyboardMarkup, InlineKeyboardButton)
+from aiogram.types import (InlineKeyboardMarkup, InlineKeyboardButton)
 from aiogram.utils.keyboard import InlineKeyboardBuilder
 
 
@@ -9,9 +8,12 @@ add_agree = InlineKeyboardMarkup(inline_keyboard=[
 ])
 
 
-# async def inline_menu(tasks):
-#
-#     keyboard = InlineKeyboardBuilder()
-#     for task in tasks:
-#         keyboard.add(InlineKeyboardButton(text=task, callback_data="task from bd"))
-#     return keyboard.adjust(2).as_markup()
+async def reminders_keyboard(reminders):
+    # reminders — список объектов или словарей с id и текстом
+    keyboard = InlineKeyboardBuilder()
+    buttons = [
+        InlineKeyboardButton(text=remind.text[:30], callback_data=f"reminder_{remind.id}")
+        for remind in reminders if remind.status=='active'
+    ]
+    keyboard.add(*buttons)
+    return keyboard.adjust(2).as_markup()
