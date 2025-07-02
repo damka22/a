@@ -2,19 +2,20 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from aiogram.types import Message, FSInputFile
 from aiogram import Router, F
-from aiogram.filters import CommandStart, Command
+from aiogram.filters import CommandStart, Command, StateFilter
 from aiogram.fsm.context import FSMContext
 from aiogram.fsm.state import State, StatesGroup
 
 from database.orm_query import orm_get_reminds
 import app.keyboard as kb
 
+
 router_handlers = Router()
+
 
 class Remind(StatesGroup):
     text = State()
     time = State()
-
 
 @router_handlers.message(CommandStart())
 async def start(message: Message):
@@ -42,6 +43,18 @@ async def add_remind(message: Message, state: FSMContext):
     await state.set_state(Remind.text)
     await message.answer("Что мне напомнить?")
 
+
+@router_handlers.message(StateFilter("*"), F.text.casefold() == "отмена")
+async def cancel_handler(message: Message, state: FSMContext, session: AsyncSession) -> None:
+    current_state = await state.get_state()
+    if current_state is None:
+        return
+    if Remind.remind_for_change:
+        Remind.remind_for_change = None
+    await state.clear()
+    await message.answer("Действия отменены", reply_markup=kb.reminders_keyboard(await orm_get_reminds(session)))
+
+
 @router_handlers.message(Remind.text)
 async def first_process_text(message: Message, state: FSMContext):
     await state.update_data(text=message.text)
@@ -67,7 +80,6 @@ async def second_process_time(message: Message, state: FSMContext):
         await message.reply("Введите целое число минут.")
     except Exception as e:
         await message.reply("Произошла ошибка, попробуйте ещё раз.")
-
 
 
 

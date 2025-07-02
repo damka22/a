@@ -8,12 +8,19 @@ add_agree = InlineKeyboardMarkup(inline_keyboard=[
 ])
 
 
-async def reminders_keyboard(reminders):
-    # reminders — список объектов или словарей с id и текстом
+def reminders_keyboard(reminders):
     keyboard = InlineKeyboardBuilder()
     buttons = [
-        InlineKeyboardButton(text=remind.text[:30], callback_data=f"reminder_{remind.id}")
+        InlineKeyboardButton(text=remind.text[:30], callback_data=f"remind_{remind.id}")
         for remind in reminders if remind.status=='active'
     ]
     keyboard.add(*buttons)
     return keyboard.adjust(2).as_markup()
+
+
+def create_remind_keyboard(remind):
+    remind_keyboard = InlineKeyboardMarkup(inline_keyboard=[
+        [InlineKeyboardButton(text='◀️ Назад', callback_data="back_to_menu"),
+         InlineKeyboardButton(text='❌ Удалить', callback_data=f"delete_{remind.id}")],
+    ])
+    return remind_keyboard

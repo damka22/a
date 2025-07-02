@@ -3,7 +3,9 @@ from aiogram import Router, F
 from aiogram.fsm.context import FSMContext
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from database.orm_query import orm_add_remind
+from database.orm_query import orm_add_remind, orm_get_remind, orm_get_reminds, orm_delete_remind
+
+from app.keyboard import create_remind_keyboard, reminders_keyboard
 
 from datetime import datetime, timedelta, timezone
 
@@ -37,4 +39,33 @@ async def disagree_add(callback: CallbackQuery, state: FSMContext):
 
     await callback.answer("Отмена")
     await callback.message.edit_text(f"Отменено", reply_markup=None)
+
+
+@router_callbacks.callback_query(F.data.startswith("remind_"))
+async def open_remind(callback: CallbackQuery, session: AsyncSession):
+    await callback.answer(" ")
+    ID_remind = int(callback.data.split("_")[-1])
+    obj = await orm_get_remind(session, ID_remind, callback.from_user.id)
+    remind_kb = create_remind_keyboard(obj)
+    await callback.message.edit_text(f"{obj.text} — {obj.end_time}", reply_markup=remind_kb)
+
+@router_callbacks.callback_query(F.data == "back_to_menu")
+async def back_to_menu(callback: CallbackQuery, session: AsyncSession):
+    await callback.answer("меню")
+
+    reminders = await orm_get_reminds(session)
+    await callback.message.edit_text("меню", reply_markup=reminders_keyboard(reminders))
+
+
+@router_callbacks.callback_query(F.data.startswith("delete_"))
+async def change_remind(callback: CallbackQuery, session: AsyncSession):
+    await callback.answer()
+    ID_remind = int(callback.data.split("_")[-1])
+
+    await orm_delete_remind(session, ID_remind, callback.from_user.id)
+    
+    reminders = await orm_get_reminds(session)
+    await callback.message.edit_text("меню", reply_markup=reminders_keyboard(reminders))
+
+
 
